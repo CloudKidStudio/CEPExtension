@@ -219,7 +219,41 @@
 				{
 					script = "var args="+JSON.stringify(args)+";\n"+script;
 				}
-				this.csInterface.evalScript(script, callback);
+
+				var self = this;
+
+				this.csInterface.evalScript(
+					script, 
+					function(response)
+					{
+						// No callback, so we'll ignore
+						if (callback === undefined) return;
+
+						var unserialized;
+
+						// Check for undefined undefined
+						if (unserialized == "undefined")
+						{
+							unserialized = undefined;
+						}
+						else
+						{
+							// Unserialize the response
+							try
+							{
+								unserialized = JSON.parse(response);
+							}
+							catch(e)
+							{
+								// Handle syntax error
+								unserialized = response;
+							}
+						}
+
+						// Bind the callback to this extension
+						callback.call(self, unserialized);
+					}
+				);
 			}
 		}
 		else
