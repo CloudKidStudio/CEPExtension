@@ -61,6 +61,12 @@
 	var p = FlashExtension.prototype = {};
 
 	/**
+	*  The name of the plugin
+	*  @property {String} name
+	*/
+	p.name = null;
+
+	/**
 	 * Initialize the extension, this is implementation specific
 	 * @method init
 	 */
@@ -79,28 +85,66 @@
 	{		
 		// Get the background color
 		var color = info.panelBackgroundColor.color;
-
-		// Add a default class for buttons and other elements
-		this.addRule(
-			".button", 
-			"color:" + reverseColor(color) + ";"
-				+"border-color:" + colorToHex(color, -50) + ";"
-				+"background-color:" + colorToHex(color, 22)
-		);
-
-		// Add a button class for buttons and other elements
-		this.addRule(
-			".button:hover", 
-			"color:" + reverseColor(color, 20) + ";"
-				+"border-color:" + colorToHex(color, -70) + ";"
-				+"background-color:" + colorToHex(color, 42)
-		);
-
+		
 		this.addRule(
 			"body", 
 			"color: " + reverseColor(color) + ";"
 				+ "font-size:" + info.baseFontSize + "px;"
 				+ "background-color:"+ colorToHex(color)
+		);
+	};
+
+	/**
+	*  Save the settings
+	*  @method saveSettings
+	*  @param {*} settings The settings object
+	*/
+	p.saveSettings = function(value)
+	{
+		if (!this.name)
+		{
+			throw 'The name property must be set before saving settings';
+		}
+
+		value = value || "";
+
+		if (typeof value != "object")
+		{
+			value = {
+				"value" : value,
+				"_isBasic" : true
+			};
+		}
+		// Save the settings file, escape the quotes
+		value = JSON.stringify(value).replace(/\"/g, '\\"');
+
+		// Save the file
+		this.execute('FLfile.write(fl.configURI + "' + this.name + '.json", "' + value + '");');
+	};
+
+	/**
+	*  Load the settings
+	*  @method loadSettings
+	*  @param {Function} callback The callback which return the settings as the only argument
+	*/
+	p.loadSettings = function(callback)
+	{
+		if (!this.name)
+		{
+			throw 'The name property must be set before loading settings';
+		}
+		this.execute(
+			'(function(){'
+				+ ' return FLfile.read(fl.configURI + "' + this.name + '.json");'
+				+ '}());',
+			function(result)
+			{
+				if (result && result._isBasic)
+				{
+					result = result.value;
+				}
+				callback.call(this, result);
+			}
 		);
 	};
 
@@ -222,6 +266,8 @@
 
 				var self = this;
 
+				Debug.info(script);
+
 				this.csInterface.evalScript(
 					script, 
 					function(response)
@@ -262,7 +308,77 @@
 		}
 	};
 
+	/**
+	*  For debugging purposes
+	*  @method toString
+	*/
+	p.toString = function()
+	{
+		return "[object FlashExtension(name='"+this.name+"')]";
+	};
+
 	// Assign to the parent window
 	global.FlashExtension = FlashExtension;
 
 }(window));
+
+(function(){
+	
+	"use strict";
+	
+	// If there's already a bind, ignore
+	if (Function.prototype.bind) return;
+	
+	/**
+	*  Designed to provide utility related to functions, the
+	*  most important of which is the Bind function, used to properly scope callbacks.
+	*  Add the bind functionality to the Function prototype
+	*  this allows passing a reference in the function callback
+	*  
+	*	callback.bind(this)
+	*	callback.bind(this, arg1)
+	*  
+	*  @class Function.prototype.bind
+	*  @constructor
+	*  @param {Object} that The reference to the function.
+	*  @param {mixed} [args*] Additional arguments
+	*  @return {Function} The new function binding.
+	*/
+	Function.prototype.bind = function(that) 
+	{
+		var target = this, 
+			args,
+			bound;
+
+		if (typeof target != "function") 
+		{
+			throw new TypeError();
+		}
+
+		args = Array.prototype.slice.call(arguments, 1);
+		bound = function()
+		{
+			if (this instanceof bound) 
+			{
+				var F, self, result;
+				F = function(){};
+				F.prototype = target.prototype;
+				self = new F();
+
+				result = target.apply(self, args.concat(Array.prototype.slice.call(arguments)));
+				
+				if (Object(result) === result)
+				{
+					return result;
+				}
+				return self;
+			}
+			else 
+			{
+				return target.apply(that, args.concat(Array.prototype.slice.call(arguments)));
+			}
+		};
+		return bound;
+	};
+	
+}());
