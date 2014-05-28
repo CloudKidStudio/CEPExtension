@@ -266,8 +266,6 @@
 
 				var self = this;
 
-				Debug.info(script);
-
 				this.csInterface.evalScript(
 					script, 
 					function(response)
