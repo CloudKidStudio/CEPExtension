@@ -37,6 +37,26 @@
 			return;
 		}
 
+		/**
+		*  The system path to the extension without trailing slash
+		*  @property {String} extensionPath
+		*  @readOnly
+		*/
+		this.extensionPath = this.csInterface.getSystemPath(SystemPath.EXTENSION);
+
+		/**
+		*  The current settings path
+		*  @property {String} settingsPath
+		*  @default SystemPath.EXTENSION + "settings.json"
+		*/
+		this.settingsPath = this.extensionPath + "/settings.json";
+
+		/**
+		*  The current settings
+		*  @property {Object|String|Number} settings
+		*/
+		this.settings = unserialize(global.cep.fs.readFile(this.settingsPath).data) || {};
+
 		var self = this;
 
 		// Update the color of the panel when the theme color of the product changed.
@@ -95,57 +115,25 @@
 	};
 
 	/**
-	*  Save the settings
-	*  @method saveSettings
-	*  @param {*} settings The settings object
+	*  Save a property that is accessible between settings
+	*  @method setProp
+	*  @param {String} name The name of the property to set
+	*  @param {mixed} value The value of the property
 	*/
-	p.saveSettings = function(value)
+	p.setProp = function(name, value)
 	{
-		if (!this.name)
-		{
-			throw 'The name property must be set before saving settings';
-		}
-
-		value = value || "";
-
-		if (typeof value != "object")
-		{
-			value = {
-				"value" : value,
-				"_isBasic" : true
-			};
-		}
-		// Save the settings file, escape the quotes
-		value = JSON.stringify(value).replace(/\"/g, '\\"');
-
-		// Save the file
-		this.execute('FLfile.write(fl.configURI + "' + this.name + '.json", "' + value + '");');
+		this.settings[name] = value;
+		global.cep.fs.writeFile(this.settingsPath, JSON.stringify(this.settings));
 	};
 
 	/**
-	*  Load the settings
+	*  Get a saved setting
 	*  @method loadSettings
-	*  @param {Function} callback The callback which return the settings as the only argument
+	*  @return {mixed} The settings object, string or whatever was saved
 	*/
-	p.loadSettings = function(callback)
+	p.getProp = function(name)
 	{
-		if (!this.name)
-		{
-			throw 'The name property must be set before loading settings';
-		}
-		this.execute(
-			'(function(){'
-				+ ' return FLfile.read(fl.configURI + "' + this.name + '.json");'
-				+ '}());',
-			function(result)
-			{
-				if (result && result._isBasic)
-				{
-					result = result.value;
-				}
-				callback.call(this, result);
-			}
-		);
+		return this.settings[name] || null;
 	};
 
 	/**
@@ -271,31 +259,11 @@
 					function(response)
 					{
 						// No callback, so we'll ignore
-						if (callback === undefined) return;
-
-						var unserialized;
-
-						// Check for undefined undefined
-						if (unserialized == "undefined")
+						if (callback !== undefined)
 						{
-							unserialized = undefined;
-						}
-						else
-						{
-							// Unserialize the response
-							try
-							{
-								unserialized = JSON.parse(response);
-							}
-							catch(e)
-							{
-								// Handle syntax error
-								unserialized = response;
-							}
-						}
-
-						// Bind the callback to this extension
-						callback.call(self, unserialized);
+							// Bind the callback to this extension
+							callback.call(self, unserialize(response));
+						}						
 					}
 				);
 			}
@@ -304,6 +272,38 @@
 		{
 			Debug.error("Unable to execute commands outside of Flash");
 		}
+	};
+
+	/**
+	*  Unserialize a string from an external file
+	*  @method unserialize
+	*  @private
+	*  @param {String} str The input string
+	*  @return {String} The unserialized string
+	*/
+	var unserialize = function(str)
+	{
+		var result;
+
+		// Check for undefined undefined
+		if (str == "undefined")
+		{
+			result = undefined;
+		}
+		else
+		{
+			// Unserialize the response
+			try
+			{
+				result = JSON.parse(str);
+			}
+			catch(e)
+			{
+				// Handle syntax error
+				result = str;
+			}
+		}
+		return result;
 	};
 
 	/**
