@@ -1,4 +1,4 @@
-(function(global, undefined){
+(function(global, $, undefined){
 
 	'use strict';
 
@@ -318,4 +318,4 @@
 	// Assign to the parent window
 	global.FlashExtension = FlashExtension;
 
-}(window));
+}(window, jQuery));
