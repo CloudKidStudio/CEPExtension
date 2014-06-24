@@ -1,6 +1,6 @@
 {
     "name": "cep-extension",
-    "version": "0.1.1",
+    "version": "1.0.0",
     "main": "cep-extension.js",
     "dependencies": {
         "jquery" : "*",
