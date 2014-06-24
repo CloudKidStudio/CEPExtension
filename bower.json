@@ -1,9 +1,10 @@
 {
     "name": "cep-extension",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "main": "cep-extension.js",
     "dependencies": {
         "jquery" : "*",
-        "cloudkid-debug" : "*"
+        "cloudkid-debug" : "*",
+        "cep-resources" : "https://github.com/Adobe-CEP/CEP-Resources.git"
     }
 }
