@@ -4,11 +4,11 @@
 
 	/**
 	*  Responsible for handling the dynamic theme changing
-	*  @class FlashExtension
+	*  @class CEPExtension
 	*  @constructor
 	*  @param {String} stylesheet The selector for the style sheet
 	*/
-	var FlashExtension = function(stylesheet)
+	var CEPExtension = function(stylesheet)
 	{
 		/**
 		*  The stylesheet element
@@ -33,7 +33,7 @@
 		// Check that we can run
 		if (!this.supported)
 		{
-			throw "Extension must run within Flash";
+			throw "Extension must run as a CEP Extension inside Adobe applications";
 			return;
 		}
 
@@ -57,6 +57,18 @@
 		*/
 		this.settings = unserialize(global.cep.fs.readFile(this.settingsPath).data) || {};
 
+		/**
+		 * The name of the app we're running within (e.g., "PHSP" = Photoshop)
+		 * @property {String} appName
+		 */
+		this.appName = this.csInterface.hostEnvironment.appName;
+		
+		/**
+		*  Are we running in Flash? Flash has a different JS API, using JSFL instead of JSX
+		*  @property {Boolean} isFlash
+		*/
+		this.isFlash = this.appName == "FLPR";
+
 		var self = this;
 
 		// Update the color of the panel when the theme color of the product changed.
@@ -78,7 +90,7 @@
 	};
 
 	// Reference to the prototype
-	var p = FlashExtension.prototype = {};
+	var p = CEPExtension.prototype = {};
 
 	/**
 	*  The name of the plugin
@@ -270,7 +282,7 @@
 		}
 		else
 		{
-			Debug.error("Unable to execute commands outside of Flash");
+			Debug.error("Unable to execute command");
 		}
 	};
 
@@ -312,10 +324,10 @@
 	*/
 	p.toString = function()
 	{
-		return "[object FlashExtension(name='"+this.name+"')]";
+		return "[object CEPExtension(name='"+this.name+"')]";
 	};
 
 	// Assign to the parent window
-	global.FlashExtension = FlashExtension;
+	global.CEPExtension = CEPExtension;
 
 }(window, jQuery));

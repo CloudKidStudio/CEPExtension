@@ -1,7 +1,7 @@
 {
-    "name": "flash-extension",
+    "name": "cep-extension",
     "version": "0.1.1",
-    "main": "FlashExtension.js",
+    "main": "cep-extension.js",
     "dependencies": {
         "jquery" : "*",
         "cloudkid-debug" : "*"
