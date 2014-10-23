@@ -33,7 +33,7 @@ Include both the JavaScript and CSS files into your extension. See the example h
 		<button class="button" id="newDoc">New Document</button>
 		<script>
 			// Create the extension
-			var extension = new CEPExtension("#stylesheet");
+			var extension = new CEPExtension("#stylesheet", "com.cloudkid.HelloWorld");
 			// Add a click hander and execute some JSFL code
 			$("#newDoc").click(function(){
 				extension.execute("fl.createDocument('timeline');");
@@ -60,7 +60,7 @@ CEPExtension object is easy to extend. Here's a standard JavaScript inheritance 
 	*/
 	var HelloWorld = function(stylesheet)
 	{
-		CEPExtension.call(this, stylesheet);
+		CEPExtension.call(this, stylesheet, "com.cloudkid.HelloWorld");
 	};
 	
 	// Extend the prototype to the CEPExtension object
