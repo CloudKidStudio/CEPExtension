@@ -7,8 +7,9 @@
 	*  @class CEPExtension
 	*  @constructor
 	*  @param {String} stylesheet The selector for the style sheet
+	*  @param {String} namespace The fullyqualified name of the app e.g., "com.cloudkid.App" 
 	*/
-	var CEPExtension = function(stylesheet)
+	var CEPExtension = function(stylesheet, namespace)
 	{
 		/**
 		*  The stylesheet element
@@ -47,15 +48,23 @@
 		/**
 		*  The current settings path
 		*  @property {String} settingsPath
-		*  @default SystemPath.EXTENSION + "settings.json"
 		*/
-		this.settingsPath = this.extensionPath + "/settings.json";
+		this.settingsPath = this.csInterface.getSystemPath(SystemPath.USER_DATA) + "/" + namespace;
+
+		// Make the directory if we don't have it
+		global.cep.fs.makedir(this.settingsPath);
+
+		/**
+		*  The full path to the settings file
+		*  @property {String} settingsFile
+		*/
+		this.settingsFile = this.settingsPath + "/settings.json";
 
 		/**
 		*  The current settings
 		*  @property {Object|String|Number} settings
 		*/
-		this.settings = unserialize(global.cep.fs.readFile(this.settingsPath).data) || {};
+		this.settings = unserialize(global.cep.fs.readFile(this.settingsFile).data) || {};
 
 		/**
 		 * The name of the app we're running within (e.g., "PHSP" = Photoshop)
@@ -135,7 +144,7 @@
 	p.setProp = function(name, value)
 	{
 		this.settings[name] = value;
-		global.cep.fs.writeFile(this.settingsPath, JSON.stringify(this.settings));
+		global.cep.fs.writeFile(this.settingsFile, JSON.stringify(this.settings));
 	};
 
 	/**
